@@ -2,8 +2,9 @@ FROM fabric8/java-centos-openjdk8-jre:latest
 
 ENV URL https://h2database.com/h2-2019-10-14.zip
 
-RUN curl ${URL} -o /tmp/h2.zip \
-    && gunzip /tmp/h2.zip -d /opt/ \
+RUN yum install unzip \
+	&& curl ${URL} -o /tmp/h2.zip \
+    && unzip /tmp/h2.zip -d /opt/ \
     && rm /tmp/h2.zip 
 
 EXPOSE 8081 1521
