@@ -1,4 +1,4 @@
-package cz.elostech.h2db-operator;
+package cz.elostech.h2db_operator;
 
 /**
  * Hello world!

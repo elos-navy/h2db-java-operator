@@ -1,4 +1,4 @@
-package cz.elostech.h2db-operator;
+package cz.elostech.h2db_operator;
 
 import static org.junit.Assert.assertTrue;
 
