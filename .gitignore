@@ -13,3 +13,4 @@ buildNumber.properties
 .project
 .classpath
 org.eclipse*
+h2db-operator/.factorypath
