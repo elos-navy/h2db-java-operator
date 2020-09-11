@@ -1,14 +1,14 @@
 FROM fabric8/java-centos-openjdk8-jre:latest
 
-ENV URL https://h2database.com/h2-2019-10-14.zip
-
+ENV H2_URL https://repo1.maven.org
+ENV H2_VERSION 1.4.200
+${URL}
 USER 0
 
-RUN yum -y install unzip \
-	&& curl ${URL} -o /tmp/h2.zip \
-    && unzip /tmp/h2.zip -d /opt/ \
-	&& chmod -R 777 /opt/h2 \
-    && rm /tmp/h2.zip 
+RUN mkdir -p /opt/h2 \
+	&& chmod -R 777 /opt/h2
+
+ADD ${H2_URL}/maven2/com/h2database/h2/${H2_VERSION}/h2-${H2_VERSION}.jar
 
 USER 1001
 EXPOSE 8081 1521
