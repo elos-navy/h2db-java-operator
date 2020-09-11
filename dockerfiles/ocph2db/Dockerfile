@@ -8,14 +8,14 @@ USER 0
 RUN mkdir -p /opt/h2 \
 	&& chmod -R 777 /opt/h2
 
-ADD ${H2_URL}/maven2/com/h2database/h2/${H2_VERSION}/h2-${H2_VERSION}.jar
+ADD ${H2_URL}/maven2/com/h2database/h2/${H2_VERSION}/h2-${H2_VERSION}.jar /opt/h2/h2-${H2_VERSION}.jar
 
 USER 1001
 EXPOSE 8081 1521
 
 VOLUME ["/opt/h2-data"]
 
-CMD java -cp /opt/h2/bin/h2*.jar org.h2.tools.Server \
+CMD java -cp /opt/h2/h2*.jar org.h2.tools.Server \
  	-web -webAllowOthers -webPort 8081 \
  	-tcp -tcpAllowOthers -tcpPort 1521 \
  	-baseDir /opt/h2-data
