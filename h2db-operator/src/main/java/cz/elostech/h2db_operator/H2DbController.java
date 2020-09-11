@@ -9,12 +9,13 @@ import com.github.containersolutions.operator.api.ResourceController;
 import com.github.containersolutions.operator.api.UpdateControl;
 
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DoneableDeployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
-
-import org.slf4j.Logger;
 
 @Controller(customResourceClass = H2DbServer.class, crdName = "h2dbs.operators.elostech.cz")
 public class H2DbController implements ResourceController<H2DbServer> {
