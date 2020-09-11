@@ -1,0 +1,33 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: ""
+spec:
+  selector:
+    matchLabels:
+      app: ""
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ""
+    spec:
+      containers:
+      - name: h2db
+        image: ""
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+        - name: h2db-data
+          mountPath: /opt/h2-data
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+      volumes:
+      - name: h2db-data
+        emptyDir: {}
+        
