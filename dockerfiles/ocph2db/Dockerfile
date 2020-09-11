@@ -2,7 +2,7 @@ FROM fabric8/java-centos-openjdk8-jre:latest
 
 ENV H2_URL https://repo1.maven.org
 ENV H2_VERSION 1.4.200
-${URL}
+
 USER 0
 
 RUN mkdir -p /opt/h2 \
