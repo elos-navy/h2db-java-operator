@@ -16,7 +16,7 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 
 import org.slf4j.Logger;
 
-@Controller(customResourceClass = H2DbServer.class, crdName = "webservers.sample.javaoperatorsdk")
+@Controller(customResourceClass = H2DbServer.class, crdName = "h2dbs.operators.elostech.cz")
 public class H2DbController implements ResourceController<H2DbServer> {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
