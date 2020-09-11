@@ -5,12 +5,14 @@ ENV H2_VERSION 1.4.200
 
 USER 0
 
-RUN mkdir -p /opt/h2 \
-	&& chmod -R 777 /opt/h2
+ADD ${H2_URL}/maven2/com/h2database/h2/${H2_VERSION}/h2-${H2_VERSION}.jar /tmp/h2-${H2_VERSION}.jar
 
-ADD ${H2_URL}/maven2/com/h2database/h2/${H2_VERSION}/h2-${H2_VERSION}.jar /opt/h2/h2-${H2_VERSION}.jar
+RUN mkdir -p /opt/h2 \
+	&& mv /tmp/h2-${H2_VERSION}.jar /opt/h2/h2-${H2_VERSION}.jar \
+	&& chmod -R 744 /opt/h2
 
 USER 1001
+
 EXPOSE 8081 1521
 
 VOLUME ["/opt/h2-data"]
