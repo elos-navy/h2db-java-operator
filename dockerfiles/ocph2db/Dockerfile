@@ -9,7 +9,8 @@ ADD ${H2_URL}/maven2/com/h2database/h2/${H2_VERSION}/h2-${H2_VERSION}.jar /tmp/h
 
 RUN mkdir -p /opt/h2 \
 	&& mv /tmp/h2-${H2_VERSION}.jar /opt/h2/h2-${H2_VERSION}.jar \
-	&& chmod -R 744 /opt/h2
+	&& chown -R 1001:1001 /opt/h2 \
+	&& chmod -R 777 /opt/h2
 
 USER 1001
 
