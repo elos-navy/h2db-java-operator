@@ -44,7 +44,7 @@ public class H2DbController implements ResourceController<H2DbServer> {
         String namespace = h2dbServer.getMetadata().getNamespace();
         String image = h2dbServer.getSpec().getImage();
         Deployment deployment = loadYaml(Deployment.class, "h2db-deployment.yaml");
-
+        
         deployment.getMetadata().setName(deploymentName(h2dbServer));
         deployment.getMetadata().setNamespace(namespace);
         deployment.getSpec().getSelector().getMatchLabels().put("app", deploymentName(h2dbServer));
