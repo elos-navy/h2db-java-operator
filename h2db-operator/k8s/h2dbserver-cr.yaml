@@ -1,0 +1,6 @@
+apiVersion: "operators.elostech.cz/v1"
+kind: H2DbServer
+metadata:
+  name: h2db-sample
+spec:
+  image: quay.io/elostech/h2db:latest

@@ -1,0 +1,23 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: h2dbs.operators.elostech.cz
+spec:
+  group: operators.elostech.cz
+  version: v1
+  scope: Namespaced
+  names:
+    plural: h2dbs
+    singular: h2db
+    kind: H2DbServer
+    shortNames:
+      - hs
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          properties:
+            image:
+              type: string

@@ -12,4 +12,6 @@ buildNumber.properties
 .DS_Store
 .project
 .classpath
+.vscode
 org.eclipse*
+h2db-operator/.factorypath
