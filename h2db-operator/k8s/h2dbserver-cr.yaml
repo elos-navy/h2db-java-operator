@@ -4,3 +4,5 @@ metadata:
   name: h2db-sample
 spec:
   image: quay.io/elostech/h2db:latest
+  svc_port: 1521
+  persistent: true

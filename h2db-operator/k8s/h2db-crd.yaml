@@ -21,3 +21,7 @@ spec:
           properties:
             image:
               type: string
+            svc_port:
+              type: integer
+            persistent:
+              type: boolean

@@ -2,6 +2,8 @@ package cz.elostech.h2db_operator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.github.containersolutions.operator.api.Context;
 import com.github.containersolutions.operator.api.Controller;
@@ -34,7 +36,6 @@ public class H2DbController implements ResourceController<H2DbServer> {
 
     @Override
     public boolean deleteResource(H2DbServer h2DbServer, Context<H2DbServer> context) {
-        // TODO Auto-generated method stub
         log.info("Execution deleteResource for: {}", h2DbServer.getMetadata().getName());
 
         log.info("Deleting Deployment {}", deploymentName(h2DbServer));
@@ -43,6 +44,22 @@ public class H2DbController implements ResourceController<H2DbServer> {
                 .withName(deploymentName(h2DbServer));
         if (deployment.get() != null) {
             deployment.cascading(true).delete();
+        }
+        
+        log.info("Deleting Service {}", serviceName(h2DbServer));
+        ServiceResource<Service, DoneableService> service = kubernetesClient.services()
+                .inNamespace(h2DbServer.getMetadata().getNamespace())
+                .withName(serviceName(h2DbServer));
+        if (service.get() != null) {
+            service.delete();
+        }
+
+        log.info("Deleting PVC {}", pvcName(h2DbServer));
+        Resource<PersistentVolumeClaim, DoneablePersistentVolumeClaim> pvc = kubernetesClient.persistentVolumeClaims()
+                .inNamespace(h2DbServer.getMetadata().getNamespace())
+                .withName(pvcName(h2DbServer));
+        if (pvc.get() != null) {
+            pvc.delete();
         }
 
         return true;
@@ -61,19 +78,89 @@ public class H2DbController implements ResourceController<H2DbServer> {
         deployment.getSpec().getTemplate().getMetadata().getLabels().put("app", deploymentName(h2dbServer));
         deployment.getSpec().getTemplate().getSpec().getContainers().get(0).setImage(image);
 
-        log.info("Creating or updating Deployment {} in {}", deployment.getMetadata().getName(), namespace);
+        log.info("Preparing Deployment {} in {}", deployment.getMetadata().getName(), namespace);
+        // kubernetesClient.apps().deployments().inNamespace(namespace).createOrReplace(deployment);
+
+        // Override port setting with CR value
+        List<ServicePort> ports = new ArrayList<ServicePort>(1);
+        ports.add(new ServicePortBuilder()
+            .withNewName("jdbc")
+            .withNewProtocol("TCP")
+            .withNewPort(h2dbServer.getSpec().getSvc_port())
+            .withNewTargetPort(1521)
+            .build());
+
+        Service service = loadYaml(Service.class, "h2db-jdbc-service.yaml");
+        service.getMetadata().setName(serviceName(h2dbServer));
+        service.getMetadata().setNamespace(namespace);
+        service.getMetadata().setLabels(deployment.getSpec().getTemplate().getMetadata().getLabels());
+        service.getSpec().setSelector(deployment.getSpec().getTemplate().getMetadata().getLabels());
+        service.getSpec().setPorts(ports);
+        
+        if (kubernetesClient.services().inNamespace(namespace).withName(service.getMetadata().getName()).get() == null) 
+            log.info("Creating Service {} in {}", service.getMetadata().getName(), namespace);
+        else
+            log.info("Updating Service {} in {}", service.getMetadata().getName(), namespace);
+        kubernetesClient.services().inNamespace(namespace).createOrReplace(service);
+
+        // persistence logic
+        Boolean persist = h2dbServer.getSpec().isPersistent();
+        log.debug("H2DB persistence is set to: {}", persist);
+        // kubernetesClient.persistentVolumeClaims().inNamespace(namespace).withName(pvcName(h2dbServer)).get() == null
+        if (persist) {
+            PersistentVolumeClaim pvc = kubernetesClient.persistentVolumeClaims().inNamespace(namespace).createOrReplaceWithNew()
+                .withNewMetadata().withName(pvcName(h2dbServer))
+                .withLabels(deployment.getSpec().getTemplate().getMetadata().getLabels()).endMetadata()
+                .withNewSpec()
+                .withAccessModes("ReadWriteOnce")
+                .withNewResources()
+                .addToRequests("storage", new Quantity("10Mi")) // TODO externalize to CRD
+                .endResources()
+                .endSpec()
+                .done();
+            
+            log.info("PVC in {} (re)created...", namespace);
+            Volume v = new Volume();
+            v.setName("h2db-data");
+            v.setPersistentVolumeClaim(new PersistentVolumeClaimVolumeSource(pvcName(h2dbServer), false));
+            List<Volume> volumes = new ArrayList<Volume>(1);
+            volumes.add(v);
+            deployment.getSpec().getTemplate().getSpec()
+                .setVolumes(volumes);
+
+        } else {
+            log.info("Switching off persistence to ephemeral.");
+            deployment.getSpec().getTemplate().getSpec()
+                .getVolumes().get(0).setEmptyDir(new EmptyDirVolumeSource()); // TODO limit with resources/quantity
+            log.info("Deleting PVC {}", pvcName(h2dbServer));
+            Resource<PersistentVolumeClaim, DoneablePersistentVolumeClaim> pvc = kubernetesClient.persistentVolumeClaims()
+                    .inNamespace(h2dbServer.getMetadata().getNamespace())
+                    .withName(pvcName(h2dbServer));
+            if (pvc.get() != null) {
+                pvc.delete();
+            }            
+        }
+        log.info("Creating/Updating Deployment {} in {}", deployment.getMetadata().getName(), namespace);
         kubernetesClient.apps().deployments().inNamespace(namespace).createOrReplace(deployment);
 
         H2DbServerStatus status = new H2DbServerStatus();
         status.setImage(image);
         status.setAreWeGood("Yes!");
-        h2dbServer.setStatus(status);
-//        throw new RuntimeException("Creating object failed, because it failed");
+        h2dbServer.setStatus(status);   
+
         return UpdateControl.updateCustomResource(h2dbServer);
     }
 
     private static String deploymentName(H2DbServer h2) {
-        return h2.getMetadata().getName();
+        return h2.getMetadata().getName().concat("-deployment");
+    }
+    
+    private static String serviceName(H2DbServer h2) {
+        return h2.getMetadata().getName().concat("-svc");
+    }
+
+    private static String pvcName(H2DbServer h2) {
+        return h2.getMetadata().getName().concat("-pvc");
     }
 
     private <T> T loadYaml(Class<T> clazz, String yaml) {
