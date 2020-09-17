@@ -33,9 +33,19 @@ public class H2DbController implements ResourceController<H2DbServer> {
 
 
     @Override
-    public boolean deleteResource(H2DbServer resource, Context<H2DbServer> context) {
+    public boolean deleteResource(H2DbServer h2DbServer, Context<H2DbServer> context) {
         // TODO Auto-generated method stub
-        return false;
+        log.info("Execution deleteResource for: {}", h2DbServer.getMetadata().getName());
+
+        log.info("Deleting Deployment {}", deploymentName(h2DbServer));
+        RollableScalableResource<Deployment, DoneableDeployment> deployment = kubernetesClient.apps().deployments()
+                .inNamespace(h2DbServer.getMetadata().getNamespace())
+                .withName(deploymentName(h2DbServer));
+        if (deployment.get() != null) {
+            deployment.cascading(true).delete();
+        }
+
+        return true;
     }
 
     @Override
