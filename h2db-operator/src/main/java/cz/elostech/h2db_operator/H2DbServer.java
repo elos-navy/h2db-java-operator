@@ -4,9 +4,11 @@ import io.fabric8.kubernetes.client.CustomResource;
 
 public class H2DbServer extends CustomResource {
     
-    private H2DbServerSpec spec;
+    private static final long serialVersionUID = 1L;
 
-    private H2DbServerStatus status;
+    private transient H2DbServerSpec spec;
+
+    private transient H2DbServerStatus status;
 
     public H2DbServerSpec getSpec() {
         return spec;
